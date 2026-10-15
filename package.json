@@ -25,11 +25,11 @@
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zhang-jiazhi/dsh-prompt-optimizer.git"
+    "url": "git+https://github.com/windrover/dsh-prompt-optimizer.git"
   },
-  "homepage": "https://github.com/zhang-jiazhi/dsh-prompt-optimizer#readme",
+  "homepage": "https://github.com/windrover/dsh-prompt-optimizer#readme",
   "bugs": {
-    "url": "https://github.com/zhang-jiazhi/dsh-prompt-optimizer/issues"
+    "url": "https://github.com/windrover/dsh-prompt-optimizer/issues"
   },
   "packageManager": "pnpm@10.33.0",
   "dsh": {

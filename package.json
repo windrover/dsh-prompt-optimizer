@@ -48,7 +48,7 @@
     "@deepseek-ai/schemastery": "^3.18.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh": ">=0.1.7-0",
+    "@deepseek-ai/dsh": ">=0.1.7-0 <0.2.0-0 || >=0.2.0-0",
     "@deepseek-ai/dsh-cordis-client-runner": ">=0.2.0-0",
     "@deepseek-ai/dsh-client-connection": ">=0.2.0-0"
   },

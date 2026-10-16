@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      # actions 运行时基线：三个 action 都必须声明 node24，否则 GitHub 会强制在
+      # node24 上跑并产生弃用告警（v4 的 checkout/setup-node/action-setup 都是 node20）。
+      #   - actions/checkout@v6    (v6.1.0, using: node24)
+      #   - actions/setup-node@v6  (v6.5.0, using: node24)
+      #   - pnpm/action-setup@v5   (v5.0.0, using: node24)
+      #
+      # pnpm action 特意停在 v5 而不是 v6：v6 的 bootstrap 锁死 pnpm 11.19.0，先装 v11
+      # 再 `pnpm self-update` 降级到本项目锁定的 pnpm@10.33.0，会打印
+      # "[WARN] Detected a pnpm v10 installation layout at PNPM_HOME ..."（实测复现）。
+      # v5 是 node24 基线的同时仍按 v4 的方式直接安装目标版本（node pnpm.cjs install
+      # pnpm@10.33.0），不经过 v11 bootstrap，因此无该告警。v5 的 README 也说明：
+      # version 可省略并从 package.json 的 packageManager 读取。
+      #
+      # setup-node v5+ 新增「按 packageManager 自动缓存」，但源码里显式 cache 分支优先
+      # （v5 src/main.ts: if (cache) {...} else if (packagemanagercache) {...}），
+      # 本工作流是显式 cache: pnpm，不会重复触发自动缓存；v6 把自动缓存收窄到仅 npm，
+      # 同样只影响未显式传 cache 的场景。
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      # link: 依赖不会替被链接的包安装依赖，这里显式安装插件自己的 schemastery。
+      - run: pnpm install --frozen-lockfile
+      - run: npm test

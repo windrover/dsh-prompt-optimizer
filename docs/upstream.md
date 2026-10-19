@@ -69,7 +69,7 @@ node scripts/upstream-inventory.mjs
 | 阶段 | 做什么 | 验收 |
 |---|---|---|
 | **Phase 0**（本轮） | 台账化：本文件 + `scripts/upstream-inventory.mjs`；抽样确认"依赖的是文本" | `node scripts/upstream-inventory.mjs` 输出 12/80% |
-| **Phase 1** | 语义收口：把 `{{…}}` 三类占位符的语义在 `renderVars` 里显式定义并加测试，使模板不再依赖上游的变量约定 | 新增 renderVars 单测；替换模板时不必改 `llm.js` |
+| **Phase 1** ✅（已完成） | 语义收口：占位符词汇表独立为 `lib/host/placeholders.js`（`PLACEHOLDER_NAMES` + 渲染表，正则由词汇表生成），`llm.js` 只调用 `renderVars`；`test/placeholders.mjs` 钉死 13 条语义（含单次扫描、JSON 转义、白名单保留） | ✅ 词汇表与正则不再可能不同步；替换模板时不必改 `llm.js` |
 | **Phase 2** | 改写 `image` 类 5 个（低风险） | effect 样本 image 组全绿；台账降到 7/46.7% |
 | **Phase 3** | 改写 `context` 类 4 个（中风险） | context 组样本全绿；台账降到 4/26.7% |
 | **Phase 4** | 改写 `basic` 类余下 6 个；评估 `soul-*` 是否保留 | 台账 0/0%；记录替换后的差异与回滚点 |

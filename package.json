@@ -5,7 +5,7 @@
   "type": "module",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node test/layering.mjs && node test/host-smoke.mjs && node test/client-smoke.mjs && node test/client-lifecycle-smoke.mjs",
+    "test": "node test/layering.mjs && node test/placeholders.mjs && node test/host-smoke.mjs && node test/client-smoke.mjs && node test/client-lifecycle-smoke.mjs",
     "test:effect": "node test/effect-regression.mjs"
   },
   "exports": {

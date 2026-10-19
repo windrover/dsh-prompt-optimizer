@@ -37,6 +37,8 @@ const FORBIDDEN_IMPORTS = {
 	'lib/host/context.js': ['./llm.js', './config.js'],
 	'lib/host/llm.js': ['./context.js'],
 	'lib/host/dsh.js': ['./llm.js', './context.js', './config.js'],
+	// placeholders.js 是纯词汇表叶子：不依赖任何兄弟模块
+	'lib/host/placeholders.js': ['./llm.js', './context.js', './config.js', './dsh.js', './http.js'],
 };
 for (const [file, forbidden] of Object.entries(FORBIDDEN_IMPORTS)) {
 	const src = read(file);

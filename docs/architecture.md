@@ -21,7 +21,8 @@ lib/index.js            装配层：插件声明（name/inject/Config）+ 路由
   ├── host/config.js    设置 schema、上下界钳制、活配置解包       （无内部依赖）
   ├── host/http.js      loopback 闸、读体、写响应、deadline/abort （无内部依赖）
   ├── host/context.js   会话上下文收集/裁剪/预算装配               → http.js, dsh.js
-  ├── host/llm.js       模板→消息、流式调用、自愈重试、围栏清尾    → http.js, config.js, dsh.js, validate.js
+  ├── host/llm.js       模板→消息、流式调用、自愈重试、围栏清尾    → http.js, config.js, dsh.js, placeholders.js, validate.js
+  ├── host/placeholders.js  模板变量词汇表（{{originalPrompt}} 等）  （纯叶子，无依赖）
   ├── validate.js       输出守卫（约束账本/占位符/角色卡/JSON 结构）（无内部依赖）
   └── templates.js      模板目录加载（mtime 缓存、include 展开）    （无内部依赖）
 ```

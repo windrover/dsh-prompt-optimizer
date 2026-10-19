@@ -5,7 +5,7 @@
   "type": "module",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node test/host-smoke.mjs && node test/client-smoke.mjs && node test/client-lifecycle-smoke.mjs",
+    "test": "node test/layering.mjs && node test/host-smoke.mjs && node test/client-smoke.mjs && node test/client-lifecycle-smoke.mjs",
     "test:effect": "node test/effect-regression.mjs"
   },
   "exports": {
@@ -53,8 +53,12 @@
     "@deepseek-ai/dsh-client-connection": ">=0.2.0-0"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-cordis-client-runner": { "optional": true },
-    "@deepseek-ai/dsh-client-connection": { "optional": true }
+    "@deepseek-ai/dsh-cordis-client-runner": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-connection": {
+      "optional": true
+    }
   },
   "dshCompat": {
     "testedHost": "0.2.0-rc.2",

@@ -17,16 +17,18 @@ package.json
 
 ```
 lib/index.js            装配层：插件声明（name/inject/Config）+ 路由 + 配置归一化
+  ├── host/dsh.js       ★ DSH 适配层：唯一知道宿主服务长什么样的文件  （无内部依赖）
   ├── host/config.js    设置 schema、上下界钳制、活配置解包       （无内部依赖）
   ├── host/http.js      loopback 闸、读体、写响应、deadline/abort （无内部依赖）
-  ├── host/context.js   会话上下文收集/裁剪/预算装配               → http.js
-  ├── host/llm.js       模板→消息、流式调用、自愈重试、围栏清尾    → http.js, config.js, validate.js
+  ├── host/context.js   会话上下文收集/裁剪/预算装配               → http.js, dsh.js
+  ├── host/llm.js       模板→消息、流式调用、自愈重试、围栏清尾    → http.js, config.js, dsh.js, validate.js
   ├── validate.js       输出守卫（约束账本/占位符/角色卡/JSON 结构）（无内部依赖）
   └── templates.js      模板目录加载（mtime 缓存、include 展开）    （无内部依赖）
 ```
 
 | 要改的东西 | 改哪里 |
 |---|---|
+| **DSH 服务/协议变了** | **`host/dsh.js`（只有这里）** |
 | 设置项、默认值、上下界 | `host/config.js` |
 | 鉴权、读体大小、超时/取消语义 | `host/http.js` |
 | 上下文取多少、怎么截、占位文案 | `host/context.js` |
@@ -34,6 +36,55 @@ lib/index.js            装配层：插件声明（name/inject/Config）+ 路由
 | 守卫规则（占位符丢失/注水/账本） | `validate.js` |
 | 模板语法、include、缓存 | `templates.js` + `templates/` |
 | 新增一条路由 | `lib/index.js` |
+
+## DSH 适配面（升级时只看这一节）
+
+`host/dsh.js` 是**唯一**出现 `ctx.get / ctx.webServer / ctx.inject / ctx.logger`
+的地方（`test/layering.mjs` 强制）。它把宿主暴露成 7 个窄接口：
+
+| 适配接口 | 依赖的 DSH 面 | 变化时的吸收方式 |
+|---|---|---|
+| `route(spec)` | `ctx.webServer.register` | 签名变化在本函数内转换 |
+| `stream(options)` | `ctx.get('llm').stream` | 原样转发，不改分块协议 |
+| `defaultRoute()` | `agentDefaultModel.currentSelection()` | 改名/改形状只影响这里 |
+| `readSession(id)` | `sessionQuery.readSurface/readSession` | 归一为 `{surface, pending}` |
+| `disableSettingsPage()` | `ctx.inject(['settings'])` + `settings.configure` | 失败只降级日志 |
+| `capabilities()` | 上述服务的存在性探测 | 只汇总，供启动日志降级 |
+| `service(name)` | `ctx.get` 与属性代理两种形态 | 都试、吞掉未声明抛错 |
+| `log.info/warn` | `ctx.logger` | 可选调用，永不抛 |
+
+设计约束：**零额外开销**（只转发 + 一次服务查找，每请求调用次数与原实现一致；
+不缓存服务实例，避免服务晚到导致失效）。
+
+客户端半身的适配面同样是"一节"而不是"一个文件"（`client.js` 不能拆文件）：
+
+| 适配接口 | 依赖的 DSH 面 | 位置 |
+|---|---|---|
+| `lookupService` / `resolveBinderFrom` | `configForms` / `settingsScope` 二选一 | ⑨ |
+| `useDraftInput(props)` | `props.useInput` hook，旧宿主 `props.input` 回退 | ⑨ |
+| `writeDraftTo(props, v)` | `props.inputActions.setDraft` | ⑨ |
+| `apply(ctx)` | `ctx.slots.inject/register` | ⑩ |
+
+## 分层约束（可执行）
+
+`test/layering.mjs` 已接入 `npm test`，断言三条规则：
+
+1. 宿主 API（`ctx.get/webServer/inject/logger/fiber`）只出现在 `lib/host/dsh.js`；
+2. 依赖只向下——没有模块 import `lib/index.js`，`config/http` 不依赖兄弟模块；
+3. 客户端 `props.useInput` / `props.inputActions` 只出现在客户端适配层（⑨）。
+
+改目录结构时若越层，`npm test` 直接失败——边界是断言，不是注释。
+
+## 代码量与性能
+
+```bash
+node test/bench.mjs                        # 当前树
+node test/bench.mjs --root /tmp/dpo-base   # 对照另一棵树（git worktree）
+```
+
+基准只测 CPU 热点（`validateOptimizedOutput`、`fitContextBudget`、`stripCodeFence`），
+不碰网络与宿主；`--iters/--rounds` 可调，报中位数避开抖动。
+本轮的实测对比见提交说明与 `docs/upstream.md` 同期的交接记录。
 
 ### 一次优化请求的生命周期
 

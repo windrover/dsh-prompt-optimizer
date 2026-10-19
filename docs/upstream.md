@@ -10,7 +10,7 @@
 
 | 依赖面 | 具体内容 | 性质 |
 |---|---|---|
-| 模板正文（7 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
+| 模板正文（4 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
 | 模板目录语义 | `basic / context / image` 三类 + `order` 排序 | 约定，已在 `templates.js` 固化 |
 | 变量占位符 | `{{originalPrompt}}` / `{{json:originalPrompt}}` / `{{对话上下文}}` | 语义兼容层，已在 `llm.js: renderVars` 收口 |
 | 输出习惯 | "角色卡 / 任务指令"两类输出风格 | 设计取向，非代码依赖 |
@@ -22,10 +22,8 @@
 ```bash
 node scripts/upstream-inventory.mjs
 # 模板总数: 15
-# 仍源自上游: 7 (46.7%)
-# 本地原创  : 8 (image-chinese-optimize, image-creative-text2image, image-general-optimize,
-#             image-photography-optimize, image2image-general-optimize,
-#             secure-reverse-optimize, user-task-optimize, user-task-planning)
+# 仍逐字源自上游: 4 (26.7%)
+# 本地原创      : 11
 ```
 
 脚本里维护"仍源自上游"的映射表；替换掉一个模板就从表里删一行，比例随之下降。
@@ -37,27 +35,39 @@ node scripts/upstream-inventory.mjs
 正文逐段一致（我们只删掉了 `Author: prompt-optimizer` 行、把 `Language` 改为
 "跟随原始 Prompt 的语言"，并加了本插件的 JSON 头）。
 
-| 本插件模板 | 上游文件 |
-|---|---|
-| `analytical-optimize.md` | `optimize/analytical-optimize.ts` |
-| `context-analytical-optimize.md` | `optimize/context/context-analytical-optimize.ts` |
-| `context-message-optimize.md` | `optimize/context/context-message-optimize.ts` |
-| `context-output-format-optimize.md` | `optimize/context/context-output-format-optimize.ts` |
-| `general-optimize.md` | `optimize/general-optimize.ts` |
-| `output-format-optimize.md` | `optimize/output-format-optimize.ts` |
-| `soul-openclaw-compose.md` | `optimize/soul-openclaw-compose.ts` |
+| 本插件模板 | 上游文件 | 逐字重合 |
+|---|---|---|
+| `soul-openclaw-compose.md` | `optimize/soul-openclaw-compose.ts` | 89.4% |
+| `analytical-optimize.md` | `optimize/analytical-optimize.ts` | 77.3% |
+| `output-format-optimize.md` | `optimize/output-format-optimize.ts` | 74.9% |
+| `general-optimize.md` | `optimize/general-optimize.ts` | 66.2% |
 
-`templates/_shared/` 的 12 个 include 是**本插件自建的组织方式**（上游的 TS 模板是
-整段字面量，没有 include 机制），但其段落文本可能摘自上游对应模板，需在 Phase 0
-逐条比对后才能下结论——这正是 Phase 0 的交付物。
+### 更正：台账口径从"文件名"改为"逐字重合"（2026-10-19）
+
+早期版本按**文件名相同**即计入台账，报出 7/15（46.7%）。用逐字重合审计复核后发现，
+**context 类三个模板与上游正文的重合率只有 4.0%**：它们的正文是本仓库自己写的
+（共享总纲 + include 结构），只是沿用了上游的 id 与用途。按"文本是否逐字来自上游"的
+口径，台账应为 **4/15（26.7%）**。
+
+```
+node scripts/upstream-audit.mjs     # 逐字重合审计（需联网）
+```
+
+审计方法：去掉空白后按 24 字符窗口滑动比对，报告重合率与判读。脚本带**自校准**——
+先算上游文件对自身的重合率（应 ≈100%），低于 95% 就判定方法失效并退出，避免把
+"匹配不到"误读成"没有依赖"。对照组：已知移植 77.3% / 66.2%，已知原创 0.0%。
+
+`templates/_shared/` 的 14 个 include 同样审计过：全部 ≤3.0%，即不承载上游文本
+（它们是本插件自建的组织方式；上游的 TS 模板是整段字面量，没有 include 机制）。
 
 ## 为什么还留着（不一次性替换的原因）
 
 1. **效果是有回归样本的**：`test/effect-regression.mjs` 的 27 条样本按模板 id 覆盖
    15/15。改写模板必须逐条过样本，否则等于用"看起来更干净"换"实际变差"。
-2. **三类模板的风险不同**：`image` 类（5 个）只影响出图提示词措辞，替换风险低；
-   `context` 类（4 个）与上下文消歧逻辑耦合（`ctx-core` / `ctx-user` 的边界约定）；
-   `basic` 类的 3 个已是本地原创，替换其余 6 个收益最低。
+2. **风险与收益不按"类"均分**：`image` 类 5 个已全部替换（只影响出图措辞，验证快）；
+   `context` 类 3 个经审计**本就没有上游文本**，无需替换；剩下 4 个都在 `basic` 类，
+   是角色卡/输出格式这类"结构性"模板，改写需要同时保证角色卡结构与输出格式约束
+   仍然成立，验证成本最高。
 3. **上游仍在演进**：它是 38k star 的活跃项目，模板会继续更新。保留映射表意味着
    我们**可以选择**跟进或替换，而不是被动跟跑。
 
@@ -68,8 +78,8 @@ node scripts/upstream-inventory.mjs
 | **Phase 0**（本轮） | 台账化：本文件 + `scripts/upstream-inventory.mjs`；抽样确认"依赖的是文本" | `node scripts/upstream-inventory.mjs` 输出 12/80% |
 | **Phase 1** ✅（已完成） | 语义收口：占位符词汇表独立为 `lib/host/placeholders.js`（`PLACEHOLDER_NAMES` + 渲染表，正则由词汇表生成），`llm.js` 只调用 `renderVars`；`test/placeholders.mjs` 钉死 13 条语义（含单次扫描、JSON 转义、白名单保留） | ✅ 词汇表与正则不再可能不同步；替换模板时不必改 `llm.js` |
 | **Phase 2** ✅（5/5 完成） | 改写 `image` 类 5 个。上游那版普遍是长篇修辞（"解构 / 炼金术 / 维度跃迁"），把硬约束写成了口号；重写后规则具体、可核对，并把四个模板共用的脚手架抽成 `_shared/image-core.md` + `_shared/image-user.md` | ✅ effect 样本 image 组全绿；台账 **12/15 → 7/15（46.7%）** |
-| **Phase 3** | 改写 `context` 类 4 个（中风险） | context 组样本全绿；台账降到 4/26.7% |
-| **Phase 4** | 改写 `basic` 类余下 6 个；评估 `soul-*` 是否保留 | 台账 0/0%；记录替换后的差异与回滚点 |
+| **Phase 3** ✅（无需替换） | `context` 类 3 个：逐字审计 4.0%，正文本就是我们自己的共享总纲，**不存在上游文本依赖**。降级为"质量复审"，不再消耗模型调用 | 已由 `scripts/upstream-audit.mjs` 出具证据 |
+| **Phase 4**（下一阶段） | 仍逐字来自上游的 4 个：`analytical-optimize`、`general-optimize`、`output-format-optimize`、`soul-openclaw-compose`（`soul-*` 先评估是否保留） | 台账 4 → 0；记录替换后的差异与回滚点 |
 
 每一步都是**独立可回滚的提交**，不做一次性全量替换。
 
@@ -108,9 +118,7 @@ image 类 5 个模板全部重写，每条用例重复采样：
 
 ## 仍未决的问题
 
-- **风险提示**：台账按 `templates/*.md` 计，不含 `_shared/*.md`。`image-core` / `image-user`
-  是本次新写的；但 `ctx-*`、`task-*`、`intent-rules`、`basic-user`、`plan-tail`、`secure-*`
-  共 12 个 include 的**段落来源仍未逐条核对**（Phase 0 遗留），它们可能承载了上游文本。
-  下一阶段应先核这 12 个，否则"46.7%"只说明模板正文，不说明全部文本。
+- ~~`_shared/*.md` 来源未核~~：已用 `scripts/upstream-audit.mjs` 核完，14 个 include 全部 ≤3.0%，
+  台账因此同时覆盖 `templates/*.md` 与 `_shared/*.md`。
 - 上游的模板加载/校验逻辑：已评估，不借鉴。我们的 `templates.js`（mtime 缓存 + include +
   单文件降级）已覆盖所需能力，且加载失败只跳过单文件，比上游更耐受坏模板。

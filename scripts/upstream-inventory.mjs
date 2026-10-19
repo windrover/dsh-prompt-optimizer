@@ -13,16 +13,19 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TEMPLATES = path.join(ROOT, 'templates');
 
 /**
- * 归属判据：看**正文**。正文仍与上游逐段对应才计入；重写后即使 id / 用途相同也不再计入。
- * 仍源自上游的模板：本插件文件名 → 上游文件（相对
+ * 归属判据：**逐字重合**，不是文件名。
+ *
+ * 早期版本按文件名映射（同名即计入），把 context 类三个模板也算成了上游文本——
+ * 实测它们与上游的重合率只有 4%，正文是本仓库自己写的结构（共享总纲 + include）。
+ * 现在只收留有证据的行，证据由 `scripts/upstream-audit.mjs` 给出（≥50% 重合）。
+ * 重写某个模板后：先跑 audit 确认重合率掉到 <15%，再从本表删行。
+ *
+ * 仍逐字来自上游的模板：本插件文件名 → 上游文件（相对
  * packages/core/src/services/template/default-templates/）。
  * 逐条替换后从本表删除，比例即下降。
  */
 const STILL_UPSTREAM = {
 	'analytical-optimize.md': 'optimize/analytical-optimize.ts',
-	'context-analytical-optimize.md': 'optimize/context/context-analytical-optimize.ts',
-	'context-message-optimize.md': 'optimize/context/context-message-optimize.ts',
-	'context-output-format-optimize.md': 'optimize/context/context-output-format-optimize.ts',
 	'general-optimize.md': 'optimize/general-optimize.ts',
 	'output-format-optimize.md': 'optimize/output-format-optimize.ts',
 	'soul-openclaw-compose.md': 'optimize/soul-openclaw-compose.ts',

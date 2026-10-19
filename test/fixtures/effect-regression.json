@@ -275,8 +275,11 @@
         "夜幕",
         "夜晚",
         "夜里",
-        "夜色"
-      ]
+        "夜色",
+        "入夜",
+        "夜间"
+      ],
+      "mustContain": []
     },
     {
       "id": "image-creative-core-image-kept",

@@ -43,7 +43,13 @@ async function fetchText(url) {
 }
 
 const parts = [];
-for (const file of FILES) parts.push(await fetchText(`${BASE}/${file}`));
+try {
+	for (const file of FILES) parts.push(await fetchText(`${BASE}/${file}`));
+} catch (error) {
+	console.error(`✗ 无法获取上游源文件，审计未执行（不是"没有依赖"）：${error.message}`);
+	console.error('  检查网络/代理后重试；未联网时请勿引用任何重合率数字。');
+	process.exit(1);
+}
 const upstream = strip(parts.join('\n'));
 
 /** 滑动窗口重合率：text 里有多少 24 字符片段（去空白后）逐字出现在上游。 */

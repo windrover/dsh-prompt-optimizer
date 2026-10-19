@@ -25,9 +25,6 @@ const TEMPLATES = path.join(ROOT, 'templates');
  * 逐条替换后从本表删除，比例即下降。
  */
 const STILL_UPSTREAM = {
-	'analytical-optimize.md': 'optimize/analytical-optimize.ts',
-	'general-optimize.md': 'optimize/general-optimize.ts',
-	'output-format-optimize.md': 'optimize/output-format-optimize.ts',
 	'soul-openclaw-compose.md': 'optimize/soul-openclaw-compose.ts',
 };
 

@@ -10,7 +10,7 @@
 
 | 依赖面 | 具体内容 | 性质 |
 |---|---|---|
-| 模板正文（4 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
+| 模板正文（1 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
 | 模板目录语义 | `basic / context / image` 三类 + `order` 排序 | 约定，已在 `templates.js` 固化 |
 | 变量占位符 | `{{originalPrompt}}` / `{{json:originalPrompt}}` / `{{对话上下文}}` | 语义兼容层，已在 `llm.js: renderVars` 收口 |
 | 输出习惯 | "角色卡 / 任务指令"两类输出风格 | 设计取向，非代码依赖 |
@@ -22,8 +22,8 @@
 ```bash
 node scripts/upstream-inventory.mjs
 # 模板总数: 15
-# 仍逐字源自上游: 4 (26.7%)
-# 本地原创      : 11
+# 仍逐字源自上游: 1 (6.7%)
+# 本地原创      : 14
 ```
 
 脚本里维护"仍源自上游"的映射表；替换掉一个模板就从表里删一行，比例随之下降。
@@ -38,9 +38,8 @@ node scripts/upstream-inventory.mjs
 | 本插件模板 | 上游文件 | 逐字重合 |
 |---|---|---|
 | `soul-openclaw-compose.md` | `optimize/soul-openclaw-compose.ts` | 89.4% |
-| `analytical-optimize.md` | `optimize/analytical-optimize.ts` | 77.3% |
-| `output-format-optimize.md` | `optimize/output-format-optimize.ts` | 74.9% |
-| `general-optimize.md` | `optimize/general-optimize.ts` | 66.2% |
+
+（`analytical` / `general` / `output-format` 已重写，审计重合率均降到 **0.0%**，从表里移出。）
 
 ### 更正：台账口径从"文件名"改为"逐字重合"（2026-10-19）
 
@@ -79,7 +78,7 @@ node scripts/upstream-audit.mjs     # 逐字重合审计（需联网）
 | **Phase 1** ✅（已完成） | 语义收口：占位符词汇表独立为 `lib/host/placeholders.js`（`PLACEHOLDER_NAMES` + 渲染表，正则由词汇表生成），`llm.js` 只调用 `renderVars`；`test/placeholders.mjs` 钉死 13 条语义（含单次扫描、JSON 转义、白名单保留） | ✅ 词汇表与正则不再可能不同步；替换模板时不必改 `llm.js` |
 | **Phase 2** ✅（5/5 完成） | 改写 `image` 类 5 个。上游那版普遍是长篇修辞（"解构 / 炼金术 / 维度跃迁"），把硬约束写成了口号；重写后规则具体、可核对，并把四个模板共用的脚手架抽成 `_shared/image-core.md` + `_shared/image-user.md` | ✅ effect 样本 image 组全绿；台账 **12/15 → 7/15（46.7%）** |
 | **Phase 3** ✅（无需替换） | `context` 类 3 个：逐字审计 4.0%，正文本就是我们自己的共享总纲，**不存在上游文本依赖**。降级为"质量复审"，不再消耗模型调用 | 已由 `scripts/upstream-audit.mjs` 出具证据 |
-| **Phase 4**（下一阶段） | 仍逐字来自上游的 4 个：`analytical-optimize`、`general-optimize`、`output-format-optimize`、`soul-openclaw-compose`（`soul-*` 先评估是否保留） | 台账 4 → 0；记录替换后的差异与回滚点 |
+| **Phase 4**（3/4 完成） | `analytical` / `general` / `output-format` 已重写，审计 0.0%，各用例 3/3；`soul-openclaw-compose`（89.4%）待定——它是第三方 SOUL.md 格式的生成器，要么按格式重述，要么决定下架 | 台账 1/15；soul 的取舍需要一次明确决定 |
 
 每一步都是**独立可回滚的提交**，不做一次性全量替换。
 

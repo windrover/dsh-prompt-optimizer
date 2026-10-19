@@ -13,6 +13,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TEMPLATES = path.join(ROOT, 'templates');
 
 /**
+ * 归属判据：看**正文**。正文仍与上游逐段对应才计入；重写后即使 id / 用途相同也不再计入。
  * 仍源自上游的模板：本插件文件名 → 上游文件（相对
  * packages/core/src/services/template/default-templates/）。
  * 逐条替换后从本表删除，比例即下降。
@@ -26,7 +27,6 @@ const STILL_UPSTREAM = {
 	'output-format-optimize.md': 'optimize/output-format-optimize.ts',
 	'soul-openclaw-compose.md': 'optimize/soul-openclaw-compose.ts',
 	'image-chinese-optimize.md': 'image-optimize/text2image/chinese-model-optimize.ts',
-	'image-creative-text2image.md': 'image-optimize/text2image/creative-text2image.ts',
 	'image-general-optimize.md': 'image-optimize/text2image/general-image-optimize.ts',
 	'image-photography-optimize.md': 'image-optimize/text2image/photography-optimize.ts',
 	'image2image-general-optimize.md': 'image-optimize/image2image/image2image-optimize.ts',

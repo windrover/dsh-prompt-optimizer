@@ -10,7 +10,7 @@
 
 | 依赖面 | 具体内容 | 性质 |
 |---|---|---|
-| 模板正文（12 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
+| 模板正文（11 个） | `templates/*.md` 的 system 提示词正文 | 文本，可逐条替换 |
 | 模板目录语义 | `basic / context / image` 三类 + `order` 排序 | 约定，已在 `templates.js` 固化 |
 | 变量占位符 | `{{originalPrompt}}` / `{{json:originalPrompt}}` / `{{对话上下文}}` | 语义兼容层，已在 `llm.js: renderVars` 收口 |
 | 输出习惯 | "角色卡 / 任务指令"两类输出风格 | 设计取向，非代码依赖 |
@@ -22,8 +22,8 @@
 ```bash
 node scripts/upstream-inventory.mjs
 # 模板总数: 15
-# 仍源自上游: 12 (80.0%)
-# 本地原创  : 3 (secure-reverse-optimize, user-task-optimize, user-task-planning)
+# 仍源自上游: 11 (73.3%)
+# 本地原创  : 4 (image-creative-text2image, secure-reverse-optimize, user-task-optimize, user-task-planning)
 ```
 
 脚本里维护"仍源自上游"的映射表；替换掉一个模板就从表里删一行，比例随之下降。
@@ -45,7 +45,6 @@ node scripts/upstream-inventory.mjs
 | `output-format-optimize.md` | `optimize/output-format-optimize.ts` |
 | `soul-openclaw-compose.md` | `optimize/soul-openclaw-compose.ts` |
 | `image-chinese-optimize.md` | `image-optimize/text2image/chinese-model-optimize.ts` |
-| `image-creative-text2image.md` | `image-optimize/text2image/creative-text2image.ts` |
 | `image-general-optimize.md` | `image-optimize/text2image/general-image-optimize.ts` |
 | `image-photography-optimize.md` | `image-optimize/text2image/photography-optimize.ts` |
 | `image2image-general-optimize.md` | `image-optimize/image2image/image2image-optimize.ts` |
@@ -70,11 +69,25 @@ node scripts/upstream-inventory.mjs
 |---|---|---|
 | **Phase 0**（本轮） | 台账化：本文件 + `scripts/upstream-inventory.mjs`；抽样确认"依赖的是文本" | `node scripts/upstream-inventory.mjs` 输出 12/80% |
 | **Phase 1** ✅（已完成） | 语义收口：占位符词汇表独立为 `lib/host/placeholders.js`（`PLACEHOLDER_NAMES` + 渲染表，正则由词汇表生成），`llm.js` 只调用 `renderVars`；`test/placeholders.mjs` 钉死 13 条语义（含单次扫描、JSON 转义、白名单保留） | ✅ 词汇表与正则不再可能不同步；替换模板时不必改 `llm.js` |
-| **Phase 2** | 改写 `image` 类 5 个（低风险） | effect 样本 image 组全绿；台账降到 7/46.7% |
+| **Phase 2**（进行中 1/5） | 改写 `image` 类 5 个（低风险）。首个 `image-creative-text2image` 已完成：上游那版用大量"解构/炼金术/维度跃迁"修辞，把"主体保真"写成了口号，实测把"鲸鱼"抽象掉（`image-creative-core-image-kept` 0/1）；重写后该用例 **3/3** | effect 样本 image 组全绿；台账降到 7/46.7% |
 | **Phase 3** | 改写 `context` 类 4 个（中风险） | context 组样本全绿；台账降到 4/26.7% |
 | **Phase 4** | 改写 `basic` 类余下 6 个；评估 `soul-*` 是否保留 | 台账 0/0%；记录替换后的差异与回滚点 |
 
 每一步都是**独立可回滚的提交**，不做一次性全量替换。
+
+### Phase 2 首个模板的实测记录（2026-10-19）
+
+| 用例 | 改写前 | 改写后 | 说明 |
+|---|---|---|---|
+| `image-creative-core-image-kept` | 0/1 | **3/3** | 目标缺陷：核心主体"鲸鱼"被抽象掉 |
+| `image-photography-zh` | 1/1 → 1/3 | **3/3** | 模板**未改动**；模型把"夜景"改写成"夜幕初降"，是断言过字面导致的假阴性 |
+
+因此本阶段同时修了测试夹具：`image-photography-zh` 的 `mustContain: ["夜景"]` 改为
+`mustContainAny: ["夜景","夜幕","夜晚","夜里","夜色"]`——该用例的 purpose 本就是
+"保留主体场景"，要求逐字命中会让一次正确输出被判失败。
+
+**已知局限**：effect 断言只检查硬约束（主体在不在、语言、占位符、是否输出 JSON），
+不评价审美质量。模板改写后仍需要人工看几条真实输出再决定是否保留。
 
 ## 仍未决的问题
 

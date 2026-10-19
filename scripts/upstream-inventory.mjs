@@ -26,10 +26,6 @@ const STILL_UPSTREAM = {
 	'general-optimize.md': 'optimize/general-optimize.ts',
 	'output-format-optimize.md': 'optimize/output-format-optimize.ts',
 	'soul-openclaw-compose.md': 'optimize/soul-openclaw-compose.ts',
-	'image-chinese-optimize.md': 'image-optimize/text2image/chinese-model-optimize.ts',
-	'image-general-optimize.md': 'image-optimize/text2image/general-image-optimize.ts',
-	'image-photography-optimize.md': 'image-optimize/text2image/photography-optimize.ts',
-	'image2image-general-optimize.md': 'image-optimize/image2image/image2image-optimize.ts',
 };
 
 const files = fs.readdirSync(TEMPLATES).filter((f) => f.endsWith('.md')).sort();

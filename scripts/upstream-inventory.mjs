@@ -33,10 +33,18 @@ const upstream = files.filter((f) => Object.hasOwn(STILL_UPSTREAM, f));
 const local = files.filter((f) => !Object.hasOwn(STILL_UPSTREAM, f));
 const pct = ((upstream.length / files.length) * 100).toFixed(1);
 
+/** 按设计保留：它不是"还没替换"，而是有意保留的第三方格式规范。 */
+const KEPT_BY_DESIGN = {
+	'soul-openclaw-compose.md': 'OpenClaw SOUL.md 是第三方产品的格式规范；把措辞改写一遍只会让重合率好看，实质仍是转述，故按设计保留并在此登记',
+};
+
 console.log(`模板总数: ${files.length}`);
 console.log(`仍源自上游: ${upstream.length} (${pct}%)`);
 console.log(`本地原创  : ${local.length} (${local.join(', ')})\n`);
-for (const file of upstream) console.log(`  上游  ${file.padEnd(34)} ← ${STILL_UPSTREAM[file]}`);
+for (const file of upstream) {
+	const kept = KEPT_BY_DESIGN[file];
+	console.log(`  上游  ${file.padEnd(34)} ← ${STILL_UPSTREAM[file]}${kept === undefined ? '' : '\n        按设计保留：' + kept}`);
+}
 
 // 台账必须覆盖真实存在的文件，否则替换后忘了删行会让数字虚高。
 const stale = Object.keys(STILL_UPSTREAM).filter((f) => !files.includes(f));
